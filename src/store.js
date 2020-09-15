@@ -15,7 +15,6 @@ import {
     deltaPower,
     alphaPower
   } from "@neurosity/pipes";
-  import { Subject } from "rxjs";
 
 export const Settings = {
     cutOffLow: 2,
@@ -44,7 +43,7 @@ const RootStore = types.model({
     battery: types.number,
     eeg: types.array(types.array(types.number))
 }).actions(self => ({
-    droneConnect(){
+    dc(){
         try {
             drone.connect().then(() => {
                 console.log(self)
@@ -60,6 +59,10 @@ const RootStore = types.model({
         console.log("Drone is Connected")
         self.drone.state = "connected"
         window.drone = drone;
+    },
+    disconnectDrone(){
+      console.log("Drone is disconnected")
+      self.drone.state = "disconnected"
     },
     moveRight(){
         if (self.drone.inAir){
@@ -171,7 +174,7 @@ const RootStore = types.model({
             fft({ bins: 256 }),
             alphaPower(),
             map(r => Math.max(...r)),
-            filter(reading => reading < 20),
+            filter(reading => reading < 50),
           );
 
           eyesClosed.subscribe(alpha => {
@@ -197,8 +200,10 @@ const RootStore = types.model({
             await self.client.connect(this.gatt);
             await self.client.start();
             self.setClientAsInitialized()
+            const leftChannel = channelNames.indexOf('AF7')
+            // self.client.eegReadings.subscribe(eeg => console.log(eeg))
             // self.subscribeToBatteryData()
-            // self.subscribeToBlinking()
+            self.subscribeToBlinking()
             // self.subscribeToAccelerometerData()
             // self.subscribeToFocus()
           } catch(err){
@@ -219,6 +224,12 @@ const RootStore = types.model({
     },
     get shouldConnectDrone(){
         return self.enableDrone
+    },
+    get isDroneConnected(){
+      return self.drone.state === 'connected'
+    },
+    get emergencyCutOff(){
+      return self.drone.emergencyCutOff()
     }
   }))
 
@@ -230,7 +241,7 @@ const RootStore = types.model({
         inAir: false,
         state: 'offline'
     },
-    enableDrone: false,
+    enableDrone: true,
     battery: 0,
     clientIsSet: false,
     eeg: Array(12).fill(Array(12).fill(0))

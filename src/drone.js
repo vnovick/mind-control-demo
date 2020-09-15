@@ -8,7 +8,6 @@
  *  - fe00 - contains characteristics fe01, fe02, not currently used
  */
 
-'use strict';
 
 const DEFAULT_SPEED = 50;
 const DEFAULT_DRIVE_STEPS = 40;
@@ -41,15 +40,15 @@ export const ParrotDrone = function() {
 
   function _startNotificationsForCharacteristic(serviceID, characteristicID) {
 
-    console.log('Start notifications for', characteristicID);
+    // console.log('Start notifications for', characteristicID);
 
     return new Promise((resolve, reject) => {
       return _getCharacteristic(serviceID, characteristicID)
         .then(characteristic => {
-          console.log('Got characteristic, now start notifications', characteristicID, characteristic);
+          // console.log('Got characteristic, now start notifications', characteristicID, characteristic);
           characteristic.startNotifications()
             .then(() => {
-              console.log('Started notifications for', characteristicID);
+              // console.log('Started notifications for', characteristicID);
 
               characteristic.addEventListener('characteristicvaluechanged', event => {
 
@@ -60,7 +59,7 @@ export const ParrotDrone = function() {
                   a.push('0x' + ('00' + array[i].toString(16)).slice(-2));
                 }
 
-                console.log('Notification from ' + characteristicID + ': ' + a.join(' '));
+                // console.log('Notification from ' + characteristicID + ': ' + a.join(' '));
 
                 if (characteristicID === 'fb0e') {
 
@@ -81,10 +80,10 @@ export const ParrotDrone = function() {
                   }
 
                 } else if (characteristicID === 'fb0f') {
-
                   const batteryLevel = array[array.length - 1];
 
                   console.log(`Battery Level: ${batteryLevel}%`);
+                  console.log(array)
 
                   if (batteryLevel < 10) {
                     console.error('Battery level too low!');
@@ -199,7 +198,7 @@ export const ParrotDrone = function() {
 
       // If we already have it cached...
       if (char) {
-        console.log('Return cached characteristic', char);
+        // console.log('Return cached characteristic', char);
         resolve(char);
       } else {
 
@@ -228,7 +227,7 @@ export const ParrotDrone = function() {
     var command = new Uint8Array(buffer);
     command.set(commandArray);
 
-    console.log('Write command', command);
+    // console.log('Write command', command);
 
     return characteristic.writeValue(command);
 
@@ -239,9 +238,11 @@ export const ParrotDrone = function() {
 
     return _getCharacteristic(serviceID, characteristicID)
       .then(characteristic => {
-        console.log('Got characteristic, now write');
+        // console.log('Got characteristic, now write');
         return _writeCommand(characteristic, commandArray)
-          .then(() => {console.log('Written command');});
+          .then(() => {
+            // console.log('Written command');
+          });
       });
 
   }
@@ -409,7 +410,13 @@ export const ParrotDrone = function() {
       droneDevice.gatt.disconnect();
 
     },
-
+    flatTrim: function(){
+      return droneDevice.gatt.connect()
+      .then(() => {
+        // "Flat trim" which you are meant to call before taking off
+        return _writeTo('fa00', 'fa0b', [2, ++steps.fa0b & 0xFF, 2, 0, 0, 0]);
+      })
+    },
     takeOff: function() {
 
       console.log('Take off...');

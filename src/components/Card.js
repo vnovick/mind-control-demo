@@ -5,10 +5,10 @@ export default function Card({ image, isActive, onActive, train, title, text }) 
         if (isActive && onActive){
             onActive()
         }
-    }, [isActive])
+    }, [isActive, onActive])
   return (
     <div className="w-full md:w-4/12 px-4 mr-auto ml-auto">
-      <button onClick={() => train()}>{`Record brain waves for ${title}`}</button>
+      <button className="bg-gray-100 p-5 shadow-lg" onClick={() => train()}>{`Record brain waves for ${title}`}</button>
       <div className="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded-lg bg-pink-600" style={{ border: !isActive ? 'none' : '5px solid red'}}>
         <img
           alt="..."
